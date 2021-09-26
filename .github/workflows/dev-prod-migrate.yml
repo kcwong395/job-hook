@@ -12,16 +12,11 @@ jobs:
       - name: git-checkout
         uses: actions/checkout@v2
         
-      - name: check path and files
-        run: ls -al && pwd
-        
-      - name: Push
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        with:
-          source-directory: './'
-          destination-github-username: 'kcwong395'
-          destination-repository-name: 'job-hook'
-          user-email: kcwong395@gmail.com
-          target-branch: prod
+      - name: push
+        run: |
+          git config --global user.name 'kcwong395'
+          git config --global user.email 'kcwong395@gmail.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git add -A
+          git commit -m "Automated report"
+          git push
