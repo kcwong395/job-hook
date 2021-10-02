@@ -1,0 +1,22 @@
+name: Push the code from dev to prod
+
+on: 
+  workflow_dispatch
+
+jobs:
+  migrate:
+    if: contains('["kcwong395"]', github.actor)
+    runs-on: ubuntu-latest
+    name: Migrate code from dev branch to prod
+    steps:
+      - name: git-checkout
+        uses: actions/checkout@v2
+        
+      - name: push
+        run: |
+          git config --global user.name 'kcwong395'
+          git config --global user.email 'kcwong395@gmail.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git add -A
+          git commit -m "Automated report"
+          git push dev:prod
