@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from src.scraper.scraper import Scraper
 from src.model.job import Job
+from src.error.self_defined_error import UnexpectedOutcomeError
 
 
 class ScraperSG(Scraper):
@@ -22,7 +23,7 @@ class ScraperSG(Scraper):
         agree_btn = self._driver.find_element_by_id(button_id)
         if not agree_btn:
             # this happens if id is not provided and agree button is not found
-            raise Exception('Agree Cookie Button not found')
+            raise AttributeError('Agree Cookie Button not found')
         agree_btn.click()
         self._driver.implicitly_wait(delay)
         logging.info('scraper bypassed cookie')
@@ -39,7 +40,7 @@ class ScraperSG(Scraper):
             if job_num.isnumeric():
                 logging.info(job_num + " jobs are found")
                 return int(job_num)
-        raise Exception('Failed to retrieve total number of jobs')
+        raise UnexpectedOutcomeError('Failed to retrieve total number of jobs')
 
     """
         This func finds out links for all the job details
@@ -52,7 +53,7 @@ class ScraperSG(Scraper):
             trial -= 1
             logging.info("Trial " + str(trial) + ": Current Jobs retrieved: " + str(len(job_links)))
         if len(job_links) <= 0:
-            raise Exception('No job retrieved')
+            raise UnexpectedOutcomeError('No job retrieved')
         if len(job_links) < total_job_num:
             logging.warning("Job retrieved less than expected, consider to input a higher value for trial")
         return [link.get_attribute('href') for link in job_links]
@@ -64,15 +65,16 @@ class ScraperSG(Scraper):
             spans = content.find(class_="job-infos").find_all("span")
 
             # obtains all fields of the job details
-            job = Job()
-            job.ref = content.find(id="jobID").strong.text
-            job.title = content.find(class_="page-title-medium").h1.text
-            job.location = spans[0].text.replace("\n", "")
-            job.job_type = spans[1].text.replace("\n", "")
-            job.department = spans[2].text.replace("\n", "")
-            job.start_date = content.find("span", text="Starting date:").find_next_sibling("span").strong.text
-            job.publish_date = content.find("span", text="Publication date:").find_next_sibling("span").strong.text
-            # job.qualification = content.find("div", class_="joboffer-qualification").text.replace("\n", "")
+            job = Job(
+                ref=content.find(id="jobID").strong.text,
+                title=content.find(class_="page-title-medium").h1.text,
+                location=spans[0].text.replace("\n", ""),
+                job_type=spans[1].text.replace("\n", ""),
+                department=spans[2].text.replace("\n", ""),
+                start_date=content.find("span", text="Starting date:").find_next_sibling("span").strong.text,
+                publish_date=content.find("span", text="Publication date:").find_next_sibling("span").strong.text,
+                link=job_link
+            )
 
             logging.info(job.__dict__)
             return job
@@ -92,7 +94,7 @@ class ScraperSG(Scraper):
             total_job_num = self.get_total_jobs()
             job_links = self.get_all_jobs_pages(total_job_num=total_job_num)
 
-            job_list = [self.get_job_details_from_page(link) for link in job_links[:]]
+            job_list = [self.get_job_details_from_page(link) for link in job_links[:10]]
             filter(lambda job: job is not None, job_list)
         except Exception as e:
             logging.error(e)
