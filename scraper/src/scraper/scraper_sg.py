@@ -21,9 +21,6 @@ class ScraperSG(Scraper):
     def bypass_cookie(self, button_id: str, delay: int = None) -> None:
         delay = delay or self.delay
         agree_btn = self._driver.find_element_by_id(button_id)
-        if not agree_btn:
-            # this happens if id is not provided and agree button is not found
-            raise AttributeError('Agree Cookie Button not found')
         agree_btn.click()
         self._driver.implicitly_wait(delay)
         logging.info('scraper bypassed cookie')
@@ -55,7 +52,8 @@ class ScraperSG(Scraper):
         if len(job_links) <= 0:
             raise UnexpectedOutcomeError('No job retrieved')
         if len(job_links) < total_job_num:
-            logging.warning("Job retrieved less than expected, consider to input a higher value for trial")
+            logging.warning("Job retrieved less than expected, consider to input a higher value for trial, current "
+                            "input value for trial: " + str(trial))
         return [link.get_attribute('href') for link in job_links]
 
     def get_job_details_from_page(self, job_link: str) -> Optional[Job]:
@@ -79,7 +77,7 @@ class ScraperSG(Scraper):
             logging.info(job.__dict__)
             return job
         except Exception as e:
-            logging.error("Error Occur when scraping: " + job_link + ", ", e)
+            logging.exception("Error Occur when scraping: " + job_link + ", " + str(e))
             return None
 
     # find all positions offered by SG-HK
@@ -94,10 +92,10 @@ class ScraperSG(Scraper):
             total_job_num = self.get_total_jobs()
             job_links = self.get_all_jobs_pages(total_job_num=total_job_num)
 
-            job_list = [self.get_job_details_from_page(link) for link in job_links[:10]]
+            job_list = [self.get_job_details_from_page(link) for link in job_links[:1]]
             filter(lambda job: job is not None, job_list)
+            logging.info(self.target + " scraper completed")
         except Exception as e:
-            logging.error(e)
-        logging.info(self.target + " scraper completed")
+            logging.exception(e)
         self.shutdown()
 

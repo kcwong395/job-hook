@@ -17,4 +17,4 @@ class ScraperFactory:
     def create(site: str) -> Scraper:
         if site in ScraperFactory.site_scrapers:
             return ScraperFactory.site_scrapers[site](target="Société Générale")
-        logging.error('Unrecognized Site')
+        logging.error('Unrecognized Site: ' + site)

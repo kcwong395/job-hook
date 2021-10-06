@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  scraper-db:
+    image: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: job-hook
+      MONGO_INITDB_ROOT_USERNAME: job-hook-user
+      MONGO_INITDB_ROOT_PASSWORD:
+    ports:
+      - 27017:27017
