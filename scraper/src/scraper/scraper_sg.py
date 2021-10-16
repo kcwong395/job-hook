@@ -1,17 +1,18 @@
 import logging
 from typing import List, Optional
 
-from src.scraper.scraper import Scraper
-from src.model.job import Job
-from src.error.self_defined_error import UnexpectedOutcomeError
+from scraper.src.scraper.scraper import Scraper
+from scraper.src.model.job import Job
+from scraper.src.error.self_defined_error import UnexpectedOutcomeError
+from scraper.src.utils.db_utils import DbUtils
 
 
 class ScraperSG(Scraper):
 
-    url = "https://careers.societegenerale.com/en/search?refinementList%5BjobLocation%5D%5B0%5D=Hong%20Kong"
+    _url = "https://careers.societegenerale.com/en/search?refinementList%5BjobLocation%5D%5B0%5D=Hong%20Kong"
 
-    def __init__(self, target: str, url: str = url):
-        super().__init__(target, url)
+    def __init__(self, target: str):
+        super().__init__(target, self._url)
 
     """
         This func aims at closing the cookie page by clicking the agree button
@@ -64,6 +65,7 @@ class ScraperSG(Scraper):
 
             # obtains all fields of the job details
             job = Job(
+                _id='SG-' + content.find(id="jobID").strong.text,
                 ref=content.find(id="jobID").strong.text,
                 title=content.find(class_="page-title-medium").h1.text,
                 location=spans[0].text.replace("\n", ""),
@@ -73,7 +75,6 @@ class ScraperSG(Scraper):
                 publish_date=content.find("span", text="Publication date:").find_next_sibling("span").strong.text,
                 link=job_link
             )
-
             logging.info(job.__dict__)
             return job
         except Exception as e:
@@ -94,6 +95,10 @@ class ScraperSG(Scraper):
 
             job_list = [self.get_job_details_from_page(link) for link in job_links[:1]]
             filter(lambda job: job is not None, job_list)
+
+            col = DbUtils.get_collection('sg-job')
+            DbUtils.insert_many(col, job_list)
+
             logging.info(self.target + " scraper completed")
         except Exception as e:
             logging.exception(e)
