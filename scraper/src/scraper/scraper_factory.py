@@ -1,12 +1,12 @@
 import logging
 
-from src.scraper.scraper import Scraper
-from src.scraper.scraper_sg import ScraperSG
+from scraper.src.scraper.scraper import Scraper
+from scraper.src.scraper.scraper_sg import ScraperSG
 
 
 class ScraperFactory:
 
-    site_scrapers = {
+    _site_scrapers = {
         "SG": ScraperSG,
     }
 
@@ -15,6 +15,6 @@ class ScraperFactory:
     """
     @staticmethod
     def create(site: str) -> Scraper:
-        if site in ScraperFactory.site_scrapers:
-            return ScraperFactory.site_scrapers[site](target="Société Générale")
+        if site in ScraperFactory._site_scrapers:
+            return ScraperFactory._site_scrapers[site](target="Société Générale")
         logging.error('Unrecognized Site: ' + site)
